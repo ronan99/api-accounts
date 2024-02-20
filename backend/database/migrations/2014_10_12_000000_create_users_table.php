@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('cpfCnpj')->unique();
             $table->bigInteger('balance')->default(0);
             $table->string('type');
+            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
 
             $table->rememberToken();
