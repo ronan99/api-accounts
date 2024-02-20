@@ -13,7 +13,6 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable;
-
     /**
      * The attributes that are mass assignable.
      *
@@ -24,7 +23,8 @@ class User extends Authenticatable implements JWTSubject
         'email',
         'password',
         'cpfCnpj',
-        'type'
+        'type',
+        'balance'
     ];
 
     /**
@@ -43,7 +43,6 @@ class User extends Authenticatable implements JWTSubject
      * @var array<string, string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'type' => UserType::class
     ];

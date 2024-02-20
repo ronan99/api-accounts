@@ -16,28 +16,22 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::group([
-
     'middleware' => 'api',
     'prefix' => 'auth'
-
 ], function ($router) {
-
     Route::post('login', [AuthController::class, "login"]);
     Route::post('logout', [AuthController::class, "logout"]);
     Route::post('refresh', [AuthController::class, "refresh"]);
     Route::post('me', [AuthController::class, "me"]);
-
 });
 
 Route::group([
-
     'middleware' => 'api',
-    'prefix' => 'user'
-
+    'prefix' => 'users'
 ], function ($router) {
-
-    Route::get('find/{id}', [UserController::class, "find"]);
-    Route::post('store', [UserController::class, "store"]);
-    Route::post('delete/{email}', [UserController::class, "delete"]);
-
+    Route::get('/{userId}', [UserController::class, "find"]);
+    Route::post('/', [UserController::class, "store"]);
+    Route::delete('/', [UserController::class, "delete"]);
+    Route::put('/', [UserController::class, "update"]);
+    Route::patch('/', [UserController::class, "update"]);
 });

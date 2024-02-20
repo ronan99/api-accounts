@@ -9,13 +9,16 @@ class UserService{
     public function __construct(IUserRepository $userRepository){
         $this->userRepository = $userRepository;
     }
-    public function findById(string $id){
-        return $this->userRepository->findById($id);
+    public function findById(string $userId){
+        return $this->userRepository->findById($userId);
     }
     public function store(array $data){
         return $this->userRepository->store($data);
     }
-    public function delete(string $id){
-        return $this->userRepository->delete($id);
+    public function delete(string $email){
+        return $this->userRepository->delete($email);
+    }
+    public function update(array $data){
+        return $this->userRepository->update($data);
     }
 }

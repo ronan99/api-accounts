@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
@@ -18,8 +19,13 @@ class CustomExceptionHandler extends ExceptionHandler
             return response()->json(['error' => 'Method not allowed'], 405);
         }
 
+        if ($exception instanceof AuthorizationException) {
+            return response()->json(['error' => 'Não autorizado'], 401);
+        }
+
         if($exception instanceof QueryException){
-            return response()->json(['error' => 'Um problema ocorreu na conexão com o banco. Código: ' . $exception->errorInfo[1]], 500);
+            return response()->json(['error' => 'Um problema ocorreu na conexão com o banco. Código: ' . $exception->errorInfo[1],
+        "e" => $exception->getMessage()], 500);
         }
 
         return parent::render($request, $exception);

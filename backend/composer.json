@@ -47,6 +47,14 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "init-db": [
+            "@php artisan migrate",
+            "@php artisan db:seed"
+        ],
+        "reset-db": [
+            "@php artisan migrate:rollback",
+            "@composer init-db"
         ]
     },
     "extra": {

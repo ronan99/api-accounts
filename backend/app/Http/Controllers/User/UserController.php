@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UserRequest;
+use App\Http\Requests\User\UserDeleteRequest;
+use App\Http\Requests\User\UserStoreRequest;
 use App\Services\User\UserService;
 
 class UserController extends Controller
@@ -13,15 +14,15 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
-    public function find($id){
+    public function find($userId){
         try{
-            $res = $this->userService->findById($id);
+            $res = $this->userService->findById($userId);
         }catch(\Exception $e){
             return $e->getMessage();
         }
         return $res;
     }
-    public function store(UserRequest $request){
+    public function store(UserStoreRequest $request){
         $user = $request->validated();
 
         try{
@@ -34,12 +35,25 @@ class UserController extends Controller
         return $user;
     }
 
-    public function delete($email){
+    public function delete(UserDeleteRequest $request){
         try{
-            $res = $this->userService->delete($email);
+            $res = $this->userService->delete($request->email);
         }catch(\Exception $e){
             return $e->getMessage();
         }
         return $res;
+    }
+
+    public function update(UserStoreRequest $request){
+        $user = $request->validated();
+
+        try{
+            $user = $this->userService->update($user);
+
+        }catch(\Exception $e){
+            return $e->getMessage();
+        }
+
+        return $user;
     }
 }
