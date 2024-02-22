@@ -31,21 +31,37 @@ class UserRepository implements IUserRepository {
         }
         return $user;
     }
-    public function delete(string $email){
+    public function delete(int $userId){
 
-        return $this->model->where(["email" => $email])->delete();
+        $user = $this->model->find($userId);
+
+        if(!$user){
+            throw new Exception("Usuário não encontrado");
+        }
+        if(!$user->delete()){
+            throw new Exception("Ocorreu um erro ao deletar o usuário");
+        }
+        return $user;
     }
-    public function update(array $data){
-        return $this->model->update($data);
+    public function update(string $userId, array $data){
+        $user = $this->model->find($userId);
+
+        if(!$user){
+            throw new Exception("Usuário não encontrado");
+        }
+        if(!$user->update($data)){
+            throw new Exception("Ocorreu um erro ao tentar atualizar o usuário");
+        }
+        return $user;
     }
 
     public function decrementBalance($userId, $amount){
-        $user = $this->model->findOrFail($userId);
+        $user = $this->findById($userId);
         $user->balance -= $amount;
         return $user->save();
     }
     public function incrementBalance($userId, $amount){
-        $user = $this->model->findOrFail($userId);
+        $user = $this->findById($userId);
         $user->balance += $amount;
         return $user->save();
     }

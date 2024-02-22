@@ -5,34 +5,43 @@ use App\Enums\UserType;
 use App\Repository\Contracts\Transaction\ITransactionRepository;
 use App\Repository\Contracts\User\IUserRepository;
 use Exception;
-use Http;
+use Illuminate\Http\Client\Factory as HttpClient;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class TransactionService{
     public $transactionRepository;
     public $userRepository;
+    protected $database;
+    protected $httpClient;
     protected $apiUrl = "https://run.mocky.io/v3/5794d450-d2e2-4412-8131-73d0293ac1cc";
 
-    public function __construct(ITransactionRepository $transactionRepository, IUserRepository $userRepository){
+    public function __construct(
+        ITransactionRepository $transactionRepository,
+        IUserRepository $userRepository,
+        DatabaseManager $database,
+        HttpClient $httpClient
+        ){
         $this->transactionRepository = $transactionRepository;
         $this->userRepository = $userRepository;
+        $this->database = $database;
+        $this->httpClient = $httpClient;
     }
 
     public function transferBalance(int $userFromId, int $userToId, int $amount){
-        DB::beginTransaction();
+        $this->database->beginTransaction();
         try{
             $userFrom = $this->userRepository->findAndLock($userFromId);
 
             if($userFrom->id == $userToId){
-                throw new Exception("Não pode ser feita transferência para o mesmo usuário");
+                throw new Exception("Não pode ser feita transferência para o mesmo usuário", 400);
             }
             if($userFrom->type == UserType::MERCHANT){
-                throw new Exception("Lojistas não podem fazer transferências");
+                throw new Exception("Lojistas não podem fazer transferências", 400);
             }
             if($userFrom->balance < $amount){
-                throw new Exception("Saldo insuficiente para operação");
+                throw new Exception("Saldo insuficiente para operação", 402);
             }
 
 
@@ -50,26 +59,34 @@ class TransactionService{
             }
 
         }catch(Throwable $e){
-            DB::rollBack();
-            if($e instanceof QueryException && $e->getCode() == 40001 && !empty($e->errorInfo) && $e->errorInfo[1] == 1213){
+            $this->database->rollBack();
+            if($this->isDeadlock($e)){
                 throw new Exception("Já existe uma transação em andamento", 409);
             }
             throw $e;
         }
-
-        DB::commit();
+        $this->database->commit();
 
         return $result;
     }
 
     public function apiAuth(){
         try {
-            $response = Http::get($this->apiUrl);
+            $response = $this->httpClient->get($this->apiUrl);
         } catch (Exception $e) {
             throw new Exception("Transferência não autorizada");
         }
 
         return $response->json();
+    }
+
+    private function isDeadlock($exception){
+        if($exception instanceof QueryException && $exception->getCode() == 40001
+         && !empty($exception->errorInfo) && $exception->errorInfo[1] == 1213){
+            return true;
+        }
+
+        return false;
     }
 
 }
