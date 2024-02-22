@@ -8,6 +8,7 @@ use Exception;
 use Http;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class TransactionService{
     public $transactionRepository;
@@ -48,12 +49,10 @@ class TransactionService{
                 throw new Exception("Transferência não autorizada");
             }
 
-        }catch(\Throwable $e){
+        }catch(Throwable $e){
             DB::rollBack();
-            if($e instanceof QueryException){
-                if($e->getCode() == 40001 && !empty($e->errorInfo) && $e->errorInfo[1] == 1213){
-                    throw new Exception("Já existe uma transação em andamento");
-                }
+            if($e instanceof QueryException && $e->getCode() == 40001 && !empty($e->errorInfo) && $e->errorInfo[1] == 1213){
+                throw new Exception("Já existe uma transação em andamento", 409);
             }
             throw $e;
         }
