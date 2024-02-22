@@ -38,4 +38,19 @@ class UserRepository implements IUserRepository {
     public function update(array $data){
         return $this->model->update($data);
     }
+
+    public function decrementBalance($userId, $amount){
+        $user = $this->model->findOrFail($userId);
+        $user->balance -= $amount;
+        return $user->save();
+    }
+    public function incrementBalance($userId, $amount){
+        $user = $this->model->findOrFail($userId);
+        $user->balance += $amount;
+        return $user->save();
+    }
+
+    public function findAndLock(string $userId){
+        return $this->model->where('id', '=', $userId)->lockForUpdate()->first();
+    }
 }

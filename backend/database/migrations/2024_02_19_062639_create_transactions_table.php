@@ -16,7 +16,6 @@ return new class extends Migration
             $table->unsignedBigInteger('from');
             $table->unsignedBigInteger('to');
             $table->float("amount", 11, 2);
-            $table->text("log");
 
             $table->timestamps();
 

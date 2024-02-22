@@ -67,3 +67,5 @@ services:
       - '3306'
     volumes:
       - /home/tmp/mysql/backend:/var/lib/mysql
+    networks:
+      - laravel
