@@ -7,6 +7,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Tymon\JWTAuth\Exceptions\UserNotDefinedException;
 class CustomExceptionHandler extends ExceptionHandler
 {
     public function render($request, \Throwable $exception)
@@ -22,10 +23,18 @@ class CustomExceptionHandler extends ExceptionHandler
         if ($exception instanceof AuthorizationException) {
             return response()->json(['error' => 'Não autorizado'], 401);
         }
+        if ($exception instanceof UserNotDefinedException) {
+            return response()->json(['error' => 'Não autorizado'], 401);
+        }
 
         if($exception instanceof QueryException){
             return response()->json(['error' => 'Um problema ocorreu na conexão com o banco. Código: ' . $exception->errorInfo[1],
         "e" => $exception->getMessage()], 500);
+        }
+
+
+        if(app()->environment(['production'])){
+            return response()->json(['error' => 'Um erro interno ocorreu'], 500);
         }
 
         return parent::render($request, $exception);
