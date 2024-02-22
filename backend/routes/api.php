@@ -32,7 +32,7 @@ Route::group([
 ], function ($router) {
     Route::get('/{userId}', [UserController::class, "find"]);
     Route::post('/', [UserController::class, "store"]);
-    Route::delete('/', [UserController::class, "delete"]);
+    Route::delete('/{userId}', [UserController::class, "delete"]);
     Route::put('/', [UserController::class, "update"]);
     Route::patch('/', [UserController::class, "update"]);
 });

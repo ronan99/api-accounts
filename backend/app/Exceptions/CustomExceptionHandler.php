@@ -37,6 +37,6 @@ class CustomExceptionHandler extends ExceptionHandler
             return response()->json(['error' => 'Um erro interno ocorreu'], 500);
         }
 
-        return response()->json(['error' => 'Um erro interno ocorreu', 'message' => $exception->getMessage(), 'file' => $exception->getFile()], 500);
+        return response()->json(['error' => 'Um erro interno ocorreu', 'message' => $exception->getMessage(), 'file' => $exception->getFile(), 'data' => $request->all()], 500);
     }
 }
