@@ -2,7 +2,8 @@
 
 namespace App\Exceptions;
 
-use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
@@ -28,11 +29,14 @@ class CustomExceptionHandler extends ExceptionHandler
             return response()->json(['error' => 'Não autorizado'], 401);
         }
 
+        if ($exception instanceof AuthenticationException) {
+            return response()->json(['error' => 'Não autorizado'], 401);
+        }
+
         if($exception instanceof QueryException){
             return response()->json(['error' => 'Um problema ocorreu na conexão com o banco. Código: ' . $exception->errorInfo[1],
         "e" => $exception->getMessage()], 500);
         }
-
 
         if(app()->environment(['production'])){
             return response()->json(['error' => 'Um erro interno ocorreu'], 500);

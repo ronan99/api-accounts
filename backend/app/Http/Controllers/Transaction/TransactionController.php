@@ -9,10 +9,8 @@ use Exception;
 
 class TransactionController extends Controller
 {
-    protected $transactionService;
     protected $user;
-    public function __construct(TransactionService $transactionService){
-        $this->transactionService = $transactionService;
+    public function __construct(protected TransactionService $transactionService){
         $this->user = auth()->userOrFail();
     }
 

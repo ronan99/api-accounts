@@ -5,10 +5,8 @@ use App\Repository\Contracts\User\IUserRepository;
 use Exception;
 
 class UserService{
-    public $userRepository;
 
-    public function __construct(IUserRepository $userRepository){
-        $this->userRepository = $userRepository;
+    public function __construct(protected IUserRepository $userRepository){
     }
     public function findById(string $userId){
         $user = $this->userRepository->findById($userId);
