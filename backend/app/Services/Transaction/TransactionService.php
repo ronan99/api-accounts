@@ -13,22 +13,16 @@ use Illuminate\Database\QueryException;
 use Throwable;
 
 class TransactionService{
-    public $transactionRepository;
-    public $userRepository;
-    protected $database;
-    protected $httpClient;
+
     protected $apiUrl = "https://run.mocky.io/v3/5794d450-d2e2-4412-8131-73d0293ac1cc";
 
     public function __construct(
-        ITransactionRepository $transactionRepository,
-        IUserRepository $userRepository,
-        DatabaseManager $database,
-        HttpClient $httpClient
+        protected ITransactionRepository $transactionRepository,
+        protected IUserRepository $userRepository,
+        protected DatabaseManager $database,
+        protected HttpClient $httpClient
         ){
-        $this->transactionRepository = $transactionRepository;
-        $this->userRepository = $userRepository;
-        $this->database = $database;
-        $this->httpClient = $httpClient;
+
     }
 
     public function transferBalance(int $userFromId, int $userToId, int $amount){
