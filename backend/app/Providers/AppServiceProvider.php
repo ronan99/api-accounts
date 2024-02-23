@@ -32,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Response::macro('success' , function (string $message , mixed $data = []){
+            $res = [];
             $res['message'] = $message;
             if(!empty($data)){
                 $res['data'] = $data;

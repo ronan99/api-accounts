@@ -2,6 +2,8 @@
 
 namespace App\Services\Transaction;
 use App\Enums\UserType;
+use App\Helpers\Currency;
+use App\Jobs\EmailDispatcher;
 use App\Repository\Contracts\Transaction\ITransactionRepository;
 use App\Repository\Contracts\User\IUserRepository;
 use Exception;
@@ -66,6 +68,7 @@ class TransactionService{
             throw $e;
         }
         $this->database->commit();
+        $this->dispatchNotificationJob($userFrom, $userTo, $result);
 
         return $result;
     }
@@ -87,6 +90,13 @@ class TransactionService{
         }
 
         return false;
+    }
+
+    private function dispatchNotificationJob($userFrom, $userTo, $result){
+        $currency = new Currency();
+        $value = $currency->formatToReal($result['amount']);
+        $message = "Olá, {$userTo['name']}, Você recebeu uma transferência de {$userFrom['name']} no valor de {$value}";
+        EmailDispatcher::dispatch($message, $userTo['name']);
     }
 
 }
