@@ -3,6 +3,8 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\User\UserController;
+use App\Http\Resources\TransactionResource;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -41,7 +43,9 @@ Route::group([
     'middleware' => 'api',
     'prefix' => 'transactions'
 ], function ($router) {
-    Route::get('/{userId}', [TransactionController::class, "find"]);
-    Route::post('/', [TransactionController::class, "transferBalance"]);
 
+    Route::post('/', [TransactionController::class, "transferBalance"]);
+    Route::get("/", function (){
+        return new TransactionResource(Transaction::paginate());
+    });
 });
