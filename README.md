@@ -91,4 +91,13 @@ OU rodar com docker:
 docker compose run --rm --entrypoint bash artisan
 php artisan test
 ```
-obs: bash pode ser trocado por 'sh' em caso de Sistemas diferentes.
+
+**obs:** bash pode ser trocado por 'sh' em caso de Sistemas diferentes.
+
+## TODO/Melhorias
+
+- Melhoria da Unit of Work para as transações.
+- Travar somente o usuário que está a enviar o dinheiro para melhoria de performance.
+- Criar fila para processar o saldo a ser enviado na conta de destino.
+- Disparar notificações baseados nas transações ocorridas.
+- Construção de Load Balancer e Rate limiter para requisições.
