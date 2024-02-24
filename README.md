@@ -10,7 +10,7 @@ A aplicação foi desenvolvida utilizando as Tecnologias abaixo, segue links par
 
 ## Arquitetura
 
-A arquitetura é feita utilizando o MVC do laravel(Sem views), adicionando o Repository Pattern com uma camada Services.
+A arquitetura é de uma API, utilizando o framework Laravel, adicionando o Repository Pattern com uma camada de Services.
 
 ### 1. Model
 Responsável pela representação e manipulação dos dados no banco de dados
@@ -28,6 +28,9 @@ Local onde as regras de negócio da aplicação são desenvolvidas, estabelecend
 Funciona como uma camada de abstração para operações de banco de dados.
 
 ### 6. Queues/Jobs
+São utilizados para envio de e-mails com o mock de confirmação.
+
+### 7. Tests
 São utilizados para envio de e-mails com o mock de confirmação.
 
 ## Pré-requisitos
@@ -60,18 +63,32 @@ Na raiz do projeto, execute:
 
 ```bash
 docker-compose build
-docker-compose run --rm composer install
+docker-compose run --rm composer install --ignore-platform-reqs
 docker-compose run --rm artisan key:generate
 docker-compose run --rm artisan jwt:secret
 docker-compose up -d
+docker-compose run --rm composer init-db
 ```
 
 ### 4. Rota Backend
 
-Para acessar o backend, abra o navegador e vá para:
+Url padrão do backend:
 
 [http://localhost:8080](http://localhost:8080)
 
-Endpoint da API de items: 
+## Testes
 
-[http://localhost:8080/api/items](http://localhost:8080/api/items)
+Para a realização dos testes, é utilizado o [PHPUnit](https://phpunit.de/). Foram desenvolvidos testes de integração para a API. Para consultar o funcionamento dos testes com laravel, basta acessar a documentação de [Testes](https://laravel.com/docs/10.x/testing).
+
+### Rodar testes
+
+Para rodar os testes, basta executar dentro da pasta backend:
+```bash
+php artisan test
+```
+OU rodar com docker:
+```bash
+docker compose run --rm --entrypoint bash artisan
+php artisan test
+```
+obs: bash pode ser trocado por 'sh' em caso de Sistemas diferentes.

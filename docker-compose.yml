@@ -41,7 +41,7 @@ services:
       - ./backend:/var/www/html
     depends_on:
       - php
-    entrypoint: [ 'composer', '--ignore-platform-reqs' ]
+    entrypoint: [ 'composer' ]
     networks:
       - laravel
 
