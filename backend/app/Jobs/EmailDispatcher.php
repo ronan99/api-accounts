@@ -17,7 +17,7 @@ class EmailDispatcher implements ShouldQueue
     private $providerUrl = "https://run.mocky.io/v3/54dc2cf1-3add-45b5-b5a9-6bf7e7f1f4a6";
     private $message;
     private $receiver;
-    public $tries = 5;
+    public $tries = 3;
 
     /**
      * Create a new job instance.
@@ -43,6 +43,6 @@ class EmailDispatcher implements ShouldQueue
     }
 
     public function backoff(){
-        return [3, 10, 15];
+        return [3, 3, 3];
     }
 }
