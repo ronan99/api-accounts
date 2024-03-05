@@ -3,7 +3,9 @@
 namespace App\Services\Transaction;
 use App\Enums\UserType;
 use App\Helpers\Currency;
+use App\Helpers\NotifyMessage;
 use App\Jobs\EmailDispatcher;
+use App\Jobs\TransactionDispatcher;
 use App\Repository\Contracts\Transaction\ITransactionRepository;
 use App\Repository\Contracts\User\IUserRepository;
 use Exception;
@@ -20,7 +22,8 @@ class TransactionService{
         protected ITransactionRepository $transactionRepository,
         protected IUserRepository $userRepository,
         protected DatabaseManager $database,
-        protected HttpClient $httpClient
+        protected HttpClient $httpClient,
+        protected NotifyMessage $notifyMessage
         ){
 
     }
@@ -40,19 +43,14 @@ class TransactionService{
                 throw new Exception("Saldo insuficiente para operação", 402);
             }
 
-
-            $userTo = $this->userRepository->findAndLock($userToId);
-
-            $this->userRepository->incrementBalance($userTo->id, $amount);
             $this->userRepository->decrementBalance($userFrom->id, $amount);
-
-            $result = $this->transactionRepository->transferBalance($userFrom->id, $userTo->id, $amount);
-
             $resAuthorized = $this->apiAuth();
 
             if(empty($resAuthorized['message']) || $resAuthorized['message'] != "Autorizado"){
                 throw new Exception("Transferência não autorizada");
             }
+
+            TransactionDispatcher::dispatch($userFromId, $userToId, $amount);
 
         }catch(Throwable $e){
             $this->database->rollBack();
@@ -62,9 +60,53 @@ class TransactionService{
             throw $e;
         }
         $this->database->commit();
-        $this->dispatchNotificationJob($userFrom, $userTo, $result);
+
+        return ['success' => true, 'message' => "Saldo transferido"];
+    }
+
+    public function processTransaction($userFromId, $userToId, $amount){
+        $this->database->beginTransaction();
+        try{
+
+            $userTo = $this->userRepository->findAndLock($userToId);
+            $userFrom = $this->userRepository->findById($userFromId);
+
+            $this->userRepository->incrementBalance($userTo->id, $amount);
+
+            $result = $this->transactionRepository->transferBalance($userFrom->id, $userTo->id, $amount);
+
+        }catch(Throwable $e){
+            $this->database->rollBack();
+            if($this->isDeadlock($e)){
+                throw new Exception("Já existe uma transação em andamento", 409);
+            }
+            throw $e;
+        }
+        $this->database->commit();
+        EmailDispatcher::dispatch($this->notifyMessage->successTransaction($userFrom->name, $userTo->name, $amount), $userTo->name);
 
         return $result;
+    }
+
+    public function processFailedTransaction($userId, $amount){
+        $this->database->beginTransaction();
+        try{
+
+            $userFrom = $this->userRepository->findAndLock($userId);
+
+            $this->userRepository->incrementBalance($userFrom->id, $amount);
+
+        }catch(Throwable $e){
+            $this->database->rollBack();
+            if($this->isDeadlock($e)){
+                throw new Exception("Já existe uma transação em andamento", 409);
+            }
+            throw $e;
+        }
+        $this->database->commit();
+        EmailDispatcher::dispatch($this->notifyMessage->failedTransaction($userFrom->name, $amount), $userFrom->name);
+
+        return true;
     }
 
     public function apiAuth(){
@@ -84,13 +126,6 @@ class TransactionService{
         }
 
         return false;
-    }
-
-    private function dispatchNotificationJob($userFrom, $userTo, $result){
-        $currency = new Currency();
-        $value = $currency->formatToReal($result['amount']);
-        $message = "Olá, {$userTo['name']}, Você recebeu uma transferência de {$userFrom['name']} no valor de {$value}";
-        EmailDispatcher::dispatch($message, $userTo['name']);
     }
 
 }
