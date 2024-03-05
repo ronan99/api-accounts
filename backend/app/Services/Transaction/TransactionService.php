@@ -69,7 +69,7 @@ class TransactionService{
         try{
 
             $userTo = $this->userRepository->findAndLock($userToId);
-            $userFrom = $this->userRepository->findAndLock($userFromId);
+            $userFrom = $this->userRepository->findById($userFromId);
 
             $this->userRepository->incrementBalance($userTo->id, $amount);
 
