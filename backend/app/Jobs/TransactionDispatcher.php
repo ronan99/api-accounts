@@ -9,7 +9,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Throwable;
-use Illuminate\Http\Client\Factory as Http;
 class TransactionDispatcher implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -27,15 +26,12 @@ class TransactionDispatcher implements ShouldQueue
         $this->userToId = $userToId;
         $this->amount = $amount;
     }
-
-    private $message;
-    private $receiver;
     public $tries = 3;
 
     /**
      * Execute the job.
      */
-    public function handle(Http $http, TransactionService $transactionService): void
+    public function handle(TransactionService $transactionService): void
     {
         $transaction = $transactionService->processTransaction($this->userFromId, $this->userToId, $this->amount);
 
