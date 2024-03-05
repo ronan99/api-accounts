@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Helpers;
+namespace App\Helpers\Currency\Methods;
+use App\Helpers\Currency\Interface\ICurrency;
 
+class Real implements ICurrency{
 
-class Currency {
-
-    public function formatToReal(int $value){
+    public function format(int $value){
         $amountInReal = $value / 100; // Convert cents to Real
 
         $formattedAmount = 'R$ ' . number_format($amountInReal, 2, ',', '.');
