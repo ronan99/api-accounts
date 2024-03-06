@@ -14,15 +14,13 @@ class UserRepository implements IUserRepository {
     }
 
     public function findById(string $userId){
-
-        return $this->model->find($userId);
+        $user = $this->model->find($userId);
+        return $user;
     }
 
     public function store(array $data){
         try {
-            $user = $this->model->create($data, [
-                'password' => Hash::make($data['password'])
-            ]);
+            $user = $this->model->create($data);
         } catch (Exception $e) {
             if($e->getCode() == 23000){
                 throw new Exception("Um problema ocorreu ao tentar salvar o usuário.");

@@ -1,87 +1,61 @@
 <?php
 
-namespace Tests\Feature\Api\Integration;
-
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class AuthTest extends TestCase
-{
-    use RefreshDatabase;
-    /**
-     * Test Auth with no data
-     *
-     * @return void
-     */
-    public function testValidationAuth(): void
-    {
-        $response = $this->post('/api/auth/login');
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-        $response->assertStatus(422);
-    }
+test('validation auth', function () {
+    $response = $this->post('/api/auth/login');
 
-    /**
-     * Test Auth with client fake for error
-     *
-     * @return void
-     */
-    public function testAuthClientFake()
-    {
-        $payload = [
-            'email' => 'fakeemail@test.com',
-            'password' => '1232131'
-        ];
+    $response->assertStatus(422);
+});
 
-        $response = $this->postJson('/api/auth/login', $payload);
-        $response->assertStatus(401);
-    }
+test('auth client fake', function () {
+    $payload = [
+        'email' => 'fakeemail@test.com',
+        'password' => '1232131'
+    ];
 
-    /**
-     * Test Auth with client fake for success
-     *
-     * @return void
-     */
-    public function testAuthClientSuccess(){
+    $response = $this->postJson('/api/auth/login', $payload);
+    $response->assertStatus(401);
+});
 
-        $user = User::factory()->create();
-        $payload = [
-            "email" => $user['email'],
-            "password" => 'password',
-        ];
-        $response = $this->post('/api/auth/login', $payload);
-
-        $response->assertStatus(200)->assertJsonStructure([
+test('auth client success', function () {
+    $user = User::factory()->create();
+    $payload = [
+        "email" => $user['email'],
+        "password" => 'password',
+    ];
+    $response = $this->post('/api/auth/login', $payload);
+    info(json_encode($response));
+    $response->assertStatus(200)->assertJsonStructure([
+        "message",
+        "data" =>
+        [
             "access_token",
             "token_type",
             "expires_in",
-        ]);
-    }
+        ]
+    ]);
+});
 
-    /**
-     * Error Get Me
-     *
-     * @return void
-     */
-    public function testMeError()
-    {
-        $response = $this->postJson('/api/auth/me');
+test('me error', function () {
+    $response = $this->postJson('/api/auth/me');
 
-        $response->assertStatus(401);
-    }
+    $response->assertStatus(401);
+});
 
-    /**
-     * Success Get Me
-     *
-     * @return void
-     */
-    public function testMeSuccess()
-    {
-        $this->loginForTesting();
+test('me success', function () {
+    $user = User::factory()->create();
+    $payload = [
+        "email" => $user['email'],
+        "password" => 'password',
+    ];
+    $this->post('/api/auth/login', $payload);
 
-        $response = $this->postJson("/api/auth/me");
-
-        $response->assertStatus(200)->assertJsonStructure([
+    $response = $this->postJson("/api/auth/me");
+    $response->assertStatus(200)->assertJsonStructure([
+        "data" => [
             "id",
             "name",
             "email",
@@ -92,47 +66,29 @@ class AuthTest extends TestCase
             "created_at",
             "updated_at",
             "deleted_at"
-        ]);
-    }
+        ]
+    ]);
+});
 
-    /**
-     * Success logout
-     *
-     * @return void
-     */
-    public function testLogoutSuccess()
-    {
-        $this->loginForTesting();
+test('logout success', function () {
+    $user = User::factory()->create();
+    $payload = [
+        "email" => $user['email'],
+        "password" => 'password',
+    ];
+    $this->post('/api/auth/login', $payload);
 
-        $response = $this->postJson("/api/auth/logout");
+    $response = $this->postJson("/api/auth/logout");
 
-        $response->assertStatus(200)->assertJsonStructure([
-            "message",
-        ]);
-    }
+    $response->assertStatus(200)->assertJsonStructure([
+        "message",
+    ]);
+});
 
-    /**
-     * Error logout
-     *
-     * @return void
-     */
-    public function testLogoutError()
-    {
+test('logout error', function () {
+    $response = $this->postJson("/api/auth/logout");
 
-        $response = $this->postJson("/api/auth/logout");
-
-        $response->assertStatus(401)->assertJsonStructure([
-            "error",
-        ]);
-    }
-
-
-    private function loginForTesting(){
-        $user = User::factory()->create();
-        $payload = [
-            "email" => $user['email'],
-            "password" => 'password',
-        ];
-        $this->post('/api/auth/login', $payload);
-    }
-}
+    $response->assertStatus(401)->assertJsonStructure([
+        "error",
+    ]);
+});

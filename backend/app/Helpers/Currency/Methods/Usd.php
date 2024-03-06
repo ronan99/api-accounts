@@ -5,7 +5,7 @@ use App\Helpers\Currency\Interface\ICurrency;
 
 class Usd implements ICurrency{
 
-    public function format(int $value){
+    public function format(int $value): String{
         $amountInReal = $value / 100; // Convert cents to Real
 
         $formattedAmount = '$ ' . number_format($amountInReal, 2, '.', ',');

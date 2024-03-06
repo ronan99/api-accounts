@@ -9,7 +9,11 @@ use Exception;
 
 
 class CurrencyFactory {
-    protected $formatters = [
+
+    /**
+     * @var array<string, string> $formatters
+     */
+    protected array $formatters = [
         "BRL" => Real::class,
         "USD" => Usd::class
     ];

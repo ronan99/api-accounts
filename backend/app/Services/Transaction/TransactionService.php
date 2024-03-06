@@ -2,33 +2,31 @@
 
 namespace App\Services\Transaction;
 use App\Enums\UserType;
-use App\Helpers\Currency;
 use App\Helpers\NotifyMessage;
 use App\Jobs\EmailDispatcher;
 use App\Jobs\TransactionDispatcher;
 use App\Repository\Contracts\Transaction\ITransactionRepository;
 use App\Repository\Contracts\User\IUserRepository;
 use Exception;
-use Illuminate\Http\Client\Factory as HttpClient;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Http;
 use Throwable;
 
 class TransactionService{
 
-    protected $apiUrl = "https://run.mocky.io/v3/5794d450-d2e2-4412-8131-73d0293ac1cc";
+    protected string $apiUrl = "https://run.mocky.io/v3/5794d450-d2e2-4412-8131-73d0293ac1cc";
 
     public function __construct(
         protected ITransactionRepository $transactionRepository,
         protected IUserRepository $userRepository,
         protected DatabaseManager $database,
-        protected HttpClient $httpClient,
         protected NotifyMessage $notifyMessage
         ){
 
     }
 
-    public function transferBalance(int $userFromId, int $userToId, int $amount){
+    public function transferBalance(int $userFromId, int $userToId, int $amount): Array{
         $this->database->beginTransaction();
         try{
             $userFrom = $this->userRepository->findAndLock($userFromId);
@@ -64,7 +62,7 @@ class TransactionService{
         return ['success' => true, 'message' => "Saldo transferido"];
     }
 
-    public function processTransaction($userFromId, $userToId, $amount){
+    public function processTransaction(int $userFromId, int $userToId, int $amount): Array{
         $this->database->beginTransaction();
         try{
 
@@ -88,7 +86,7 @@ class TransactionService{
         return $result;
     }
 
-    public function processFailedTransaction($userId, $amount){
+    public function processFailedTransaction(int $userId, int $amount): bool{
         $this->database->beginTransaction();
         try{
 
@@ -109,17 +107,16 @@ class TransactionService{
         return true;
     }
 
-    public function apiAuth(){
+    public function apiAuth(): Array{
         try {
-            $response = $this->httpClient->get($this->apiUrl);
+            $response = Http::get($this->apiUrl);
         } catch (Exception $e) {
             throw new Exception("Transferência não autorizada");
         }
-
         return $response->json();
     }
 
-    private function isDeadlock($exception){
+    private function isDeadlock(Throwable $exception){
         if($exception instanceof QueryException && $exception->getCode() == 40001
          && !empty($exception->errorInfo) && $exception->errorInfo[1] == 1213){
             return true;

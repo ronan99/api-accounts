@@ -1,0 +1,14 @@
+parameters:
+  checkGenericClassInNonGenericObjectType: false
+  paths:
+    - app
+    - tests
+  level: 7
+  ignoreErrors:
+    -
+      message: '#^Undefined variable: \$this$#'
+      paths:
+      - tests/*
+    - '#^Call to an undefined method Illuminate\\Contracts\\Routing\\ResponseFactory|Illuminate\\Http\\Response$#'
+    - '#^Access to an undefined property App\\Models(.*)::.*$#'
+    - '#^Call to an undefined method Illuminate\\(.*)::.*$#'

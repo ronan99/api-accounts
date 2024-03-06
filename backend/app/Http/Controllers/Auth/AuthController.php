@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AuthRequest;
+use Exception;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
@@ -12,37 +14,42 @@ class AuthController extends Controller
         $this->middleware('auth:api', ['except' => ['login']]);
     }
 
-    public function login(AuthRequest $request)
+    public function login(AuthRequest $request): JsonResponse
     {
-        $credentials = $request->validated();
-        $token = auth()->attempt($credentials);
-        if (!$token) {
-            return response()->json(['error' => 'Não autorizado'], 401);
+        try {
+            $credentials = $request->validated();
+            $token = auth()->attempt($credentials);
+
+            if (!$token) {
+                throw new Exception('Não autorizado', 401);
+            }
+        }catch(Exception $e){
+            return response()->error($e);
         }
 
         return $this->respondWithToken($token);
     }
 
-    public function me()
+    public function me(): JsonResponse
     {
-        return response()->json(auth()->user());
+        return response()->success("Logado", auth()->user());
     }
 
-    public function logout()
+    public function logout(): JsonResponse
     {
         auth()->logout();
 
-        return response()->json(['message' => 'Deslogado com sucesso']);
+        return response()->success('Deslogado com sucesso');
     }
 
-    public function refresh()
+    public function refresh(): JsonResponse
     {
         return $this->respondWithToken(auth()->refresh());
     }
 
-    protected function respondWithToken($token)
+    protected function respondWithToken($token): JsonResponse
     {
-        return response()->json([
+        return response()->success("Logado com sucesso",[
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60

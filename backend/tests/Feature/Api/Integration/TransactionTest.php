@@ -1,122 +1,98 @@
 <?php
 
-namespace Tests\Feature\Api\Integration;
-
 use App\Enums\UserType;
+use App\Jobs\TransactionDispatcher;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithoutMiddleware;
-use Illuminate\Testing\Fluent\AssertableJson;
-use Tests\TestCase;
+use Illuminate\Support\Facades\Queue;
 
-class TransactionTest extends TestCase
-{
-    use RefreshDatabase, WithoutMiddleware;
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(\Illuminate\Foundation\Testing\WithoutMiddleware::class);
 
-    /**
-     * Transferir saldo com saldo.
-     */
-    public function testTransferBalanceSuccess(): void
-    {
-        $userFrom = User::factory()->state(["type" => UserType::PERSON])->create();
-        $payload = [
-            "email" => $userFrom['email'],
-            "password" => 'password',
-        ];
-        $loginRes = $this->post('/api/auth/login', $payload);
+test('transfer balance success', function () {
+    Queue::fake();
+    $userFrom = User::factory()->state(["type" => UserType::PERSON])->create();
+    $payload = [
+        "email" => $userFrom['email'],
+        "password" => 'password',
+    ];
+    $loginRes = $this->post('/api/auth/login', $payload);
 
-        $loginRes->assertStatus(200);
+    $loginRes->assertStatus(200);
 
-        $userTo = User::factory()->create();
+    $userTo = User::factory()->create();
 
-        $payload = [
-            "userTo" => $userTo['id'],
-            "amount" => 100
-        ];
-        $response = $this->post("/api/transactions", $payload);
+    $payload = [
+        "userTo" => $userTo['id'],
+        "amount" => 100
+    ];
+    $response = $this->post("/api/transactions", $payload);
 
-        $response->assertStatus(200)->assertJson(fn (AssertableJson $json) =>
-        $json->where('data.from', $userFrom['id'])
-             ->where('data.to', $userTo['id'])
-             ->where('data.amount', 100)
-             ->etc()
-        );
-    }
+    $response->assertOk();
 
-    /**
-     * Transferir saldo sem saldo.
-     */
-    public function testInsufficientBalanceError(): void
-    {
-        $userFrom = User::factory()->state(["type" => UserType::PERSON])->create();
-        $payload = [
-            "email" => $userFrom['email'],
-            "password" => 'password',
-        ];
-        $loginRes = $this->post('/api/auth/login', $payload);
+    Queue::assertPushed(TransactionDispatcher::class);
+});
 
-        $loginRes->assertStatus(200);
+test('insufficient balance error', function () {
+    Queue::fake();
+    Queue::assertNothingPushed();
+    $userFrom = User::factory()->state(["type" => UserType::PERSON])->create();
+    $payload = [
+        "email" => $userFrom['email'],
+        "password" => 'password',
+    ];
+    $loginRes = $this->post('/api/auth/login', $payload);
 
-        $userTo = User::factory()->create();
+    $loginRes->assertStatus(200);
 
-        $payload = [
-            "userTo" => $userTo['id'],
-            "amount" => 1000000
-        ];
-        $response = $this->post("/api/transactions", $payload);
+    $userTo = User::factory()->create();
 
-        $response->assertStatus(402)->assertJsonStructure(["message"]);
-    }
+    $payload = [
+        "userTo" => $userTo['id'],
+        "amount" => 1000000
+    ];
+    $response = $this->post("/api/transactions", $payload);
 
-    /**
-     * Transferir saldo com usuário merchant
-     */
-    public function testUserTypeMerchantError(): void
-    {
-        $userFrom = User::factory()->state(["type" => UserType::MERCHANT])->create();
-        $payload = [
-            "email" => $userFrom['email'],
-            "password" => 'password',
-        ];
-        $loginRes = $this->post('/api/auth/login', $payload);
+    $response->assertStatus(402)->assertJsonStructure(["message"]);
 
-        $loginRes->assertStatus(200);
+    Queue::assertNotPushed(TransactionDispatcher::class);
+});
 
-        $userTo = User::factory()->create();
+test('user type merchant error', function () {
+    $userFrom = User::factory()->state(["type" => UserType::MERCHANT])->create();
+    $payload = [
+        "email" => $userFrom['email'],
+        "password" => 'password',
+    ];
+    $loginRes = $this->post('/api/auth/login', $payload);
 
-        $payload = [
-            "userTo" => $userTo['id'],
-            "amount" => 1000
-        ];
-        $response = $this->post("/api/transactions", $payload);
+    $loginRes->assertStatus(200);
 
-        $response->assertStatus(400)->assertJsonStructure(["message"]);
-    }
+    $userTo = User::factory()->create();
 
+    $payload = [
+        "userTo" => $userTo['id'],
+        "amount" => 1000
+    ];
+    $response = $this->post("/api/transactions", $payload);
 
-    /**
-     * Transferir saldo para o mesmo usuário
-     */
-    public function testSameUserError(): void
-    {
-        $userFrom = User::factory()->state(["type" => UserType::MERCHANT])->create();
-        $payload = [
-            "email" => $userFrom['email'],
-            "password" => 'password',
-        ];
-        $loginRes = $this->post('/api/auth/login', $payload);
+    $response->assertStatus(400)->assertJsonStructure(["message"]);
+});
 
-        $loginRes->assertStatus(200);
+test('same user error', function () {
+    $userFrom = User::factory()->state(["type" => UserType::MERCHANT])->create();
+    $payload = [
+        "email" => $userFrom['email'],
+        "password" => 'password',
+    ];
+    $loginRes = $this->post('/api/auth/login', $payload);
 
+    $loginRes->assertStatus(200);
 
-        $payload = [
-            "userTo" => $userFrom['id'],
-            "amount" => 1000
-        ];
-        $response = $this->post("/api/transactions", $payload);
+    $payload = [
+        "userTo" => $userFrom['id'],
+        "amount" => 1000
+    ];
+    $response = $this->post("/api/transactions", $payload);
 
-        $response->assertStatus(400)->assertJsonStructure(["message"]);
-    }
-
-
-}
+    $response->assertStatus(400)->assertJsonStructure(["message"]);
+});
